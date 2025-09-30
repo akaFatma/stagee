@@ -1,18 +1,23 @@
 import { app, BrowserWindow, dialog, ipcMain } from 'electron';
 import path from 'path';
-import { isDev } from './util.js';
+import { fileURLToPath } from 'url';
 import axios from 'axios';
+import { isDev } from './util.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const BACKEND_URL = 'http://localhost:3001';
 let mainWindow: BrowserWindow | null = null;
 
-// Check if backend is running
 async function waitForBackend(maxAttempts = 30): Promise<boolean> {
   for (let i = 0; i < maxAttempts; i++) {
     try {
-      await axios.get(`${BACKEND_URL}/api/health`);
-      console.log('✅ Backend is ready');
-      return true;
+      const response = await axios.get(`${BACKEND_URL}/api/health`, { timeout: 1000 });
+      if (response.data.status === 'ok') {
+        console.log('✅ Backend connected');
+        return true;
+      }
     } catch (error) {
       console.log(`⏳ Waiting for backend... (${i + 1}/${maxAttempts})`);
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -26,11 +31,12 @@ function createWindow() {
     width: 1400,
     height: 900,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.cjs'),
+      preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: false
-    }
+    },
+    title: 'Détecteur de Plagiat Pascal'
   });
 
   if (isDev()) {
@@ -41,27 +47,24 @@ function createWindow() {
   }
 }
 
-// IPC Handlers
 function setupIPCHandlers() {
-  // File selection dialog
   ipcMain.handle('dialog:open-files', async () => {
-    if (!mainWindow) return { success: false, files: [] };
+    if (!mainWindow) return { success: false, files: [], error: 'Window not available' };
     
     try {
       const result = await dialog.showOpenDialog(mainWindow, {
         properties: ['openFile', 'multiSelections'],
         filters: [
-          { name: 'Pascal Files', extensions: ['pas'] },
+          { name: 'Pascal Files', extensions: ['pas', 'p', 'pp'] },
           { name: 'All Files', extensions: ['*'] }
         ]
       });
 
       if (result.canceled || result.filePaths.length === 0) {
-        return { success: false, files: [] };
+        return { success: true, files: [] };
       }
 
-      // Read file contents
-      const fs = require('fs').promises;
+      const fs = await import('fs/promises');
       const files = await Promise.all(
         result.filePaths.map(async (filePath) => {
           const content = await fs.readFile(filePath, 'utf-8');
@@ -77,9 +80,10 @@ function setupIPCHandlers() {
         })
       );
 
+      console.log(`📂 Loaded ${files.length} files`);
       return { success: true, files };
     } catch (error) {
-      console.error('Error reading files:', error);
+      console.error('File read error:', error);
       return { 
         success: false, 
         files: [], 
@@ -88,66 +92,77 @@ function setupIPCHandlers() {
     }
   });
 
-  // Plagiarism detection
   ipcMain.handle('detect:plagiarism', async (event, file1, file2) => {
     try {
-      const response = await axios.post(`${BACKEND_URL}/api/detect`, {
-        file1,
-        file2
-      });
+      console.log(`🔍 Analyzing: ${file1.name} vs ${file2.name}`);
+      
+      const response = await axios.post(
+        `${BACKEND_URL}/api/detect`,
+        { file1, file2 },
+        { timeout: 60000 }
+      );
       
       return response.data;
     } catch (error: any) {
       console.error('Detection error:', error);
       return {
         success: false,
-        error: error.response?.data?.error || error.message
+        error: error.code === 'ECONNREFUSED' 
+          ? 'Backend not responding. Ensure it runs on port 3001.' 
+          : error.response?.data?.error || error.message
       };
     }
   });
 
-  // Batch detection
   ipcMain.handle('detect:batch', async (event, files, options) => {
     try {
-      const response = await axios.post(`${BACKEND_URL}/api/detect-batch`, {
-        files,
-        threshold: options?.threshold
-      });
+      console.log(`🔍 Batch analyzing ${files.length} files`);
+      
+      const response = await axios.post(
+        `${BACKEND_URL}/api/detect-batch`,
+        { files, threshold: options?.threshold || 0.3 },
+        { timeout: 300000 }
+      );
       
       return response.data;
     } catch (error: any) {
-      console.error('Batch detection error:', error);
+      console.error('Batch error:', error);
       return {
         success: false,
-        error: error.response?.data?.error || error.message
+        error: error.code === 'ECONNREFUSED'
+          ? 'Backend not responding'
+          : error.response?.data?.error || error.message
       };
     }
   });
 
-  // Get detector config
   ipcMain.handle('detect:config', async () => {
     try {
-      const response = await axios.get(`${BACKEND_URL}/api/config`);
+      const response = await axios.get(`${BACKEND_URL}/api/config`, { timeout: 5000 });
       return response.data;
     } catch (error: any) {
-      console.error('Config error:', error);
-      return {
-        success: false,
-        error: error.response?.data?.error || error.message
-      };
+      return { success: false, error: error.message };
     }
   });
 }
 
 app.on('ready', async () => {
-  // Wait for backend to be ready
+  console.log('🚀 Starting Electron app...');
+  
   const backendReady = await waitForBackend();
   
   if (!backendReady) {
-    dialog.showErrorBox(
-      'Backend Error',
-      'Could not connect to the backend server. Please ensure it is running on port 3001.'
-    );
+    const choice = dialog.showMessageBoxSync({
+      type: 'error',
+      title: 'Backend Error',
+      message: 'Cannot connect to backend server',
+      detail: 'Please start backend:\n\ncd backend\nnpm run dev',
+      buttons: ['Retry', 'Quit']
+    });
+    
+    if (choice === 0) {
+      app.relaunch();
+    }
     app.quit();
     return;
   }
@@ -157,13 +172,9 @@ app.on('ready', async () => {
 });
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
+  if (process.platform !== 'darwin') app.quit();
 });
 
 app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
-  }
+  if (BrowserWindow.getAllWindows().length === 0) createWindow();
 });

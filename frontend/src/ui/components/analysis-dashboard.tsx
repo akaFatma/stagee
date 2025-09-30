@@ -278,7 +278,7 @@ export default function AnalysisDashboard({ selectedFiles, onFilesChange, onAnal
         onFilesChange(completedFiles)
 
         addToLog(`✅ Analyse terminée: ${results.length} comparaisons effectuées`)
-        addToLog(`⚠️ ${results.filter(r => r.status === 'high').length} risques élevés détectés`)
+        addToLog(`⚠️ ${results.filter((r:any) => r.status === 'high').length} risques élevés détectés`)
         
         // Notify parent component
         if (onAnalysisComplete) {

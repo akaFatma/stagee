@@ -219,8 +219,8 @@ export default function SettingsPanel() {
               <div className="space-y-3">
                 <Label className="text-sm font-medium">Sensibilité de détection ({config.sensitivity}%)</Label>
                 <Slider
-                  value={[config.sensitivity]}
-                  onValueChange={([value]) => updateConfig("sensitivity", value)}
+                  value={[String(config.sensitivity)]}
+                  onValueChange={([value]) => updateConfig("sensitivity", Number(value))}
                   max={100}
                   step={5}
                   className="w-full"
