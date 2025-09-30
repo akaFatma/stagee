@@ -1,11 +1,11 @@
 // Enhanced detector/pascalPlagiarismDetector.ts with integrated fragment mapping
-import { PascalTokenizer } from '../../tokenizer/tokenizer';
-import { FingerprintIndex } from '../fingerprintIndex';
-import { TokenizedFile } from '../../file/tokenizedFile';
-import { File } from '../../file/file';
-import { Pair } from '../pair';
-import { Fragment } from '../fragment';
-import { Region } from '../../util/region';
+import { PascalTokenizer } from './tokenizer/tokenizer';
+import { FingerprintIndex } from './algorithm/fingerprintIndex';
+import { TokenizedFile } from './file/tokenizedFile';
+import { File } from './file/file';
+import { Pair } from './algorithm/pair';
+import { Fragment } from './algorithm/fragment';
+import { Region } from './util/region';
 
 // Enhanced interfaces that include fragment mapping
 export interface MappedFragment {
