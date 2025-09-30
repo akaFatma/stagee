@@ -1,13 +1,13 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "../components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card.js"
-import { Badge } from "../components/ui/badge.js"
-import { Input } from "../components/ui/input.js"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select.js"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs.js"
-import { Progress } from "../components/ui/progress.js"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.js"
+import { Badge } from "@/components/ui/badge.js"
+import { Input } from "@/components/ui/input.js"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select.js"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.js"
+import { Progress } from "@/components/ui/progress.js"
 import {
   Search,
   Filter,

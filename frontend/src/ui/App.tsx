@@ -1,8 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "./components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs"
+import { Button } from "@/components/ui/button"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Settings, FileText, BarChart3, Search, Users, AlertCircle } from "lucide-react"
 import AnalysisDashboard from "./components/analysis-dashboard"
 import ResultsViewer from "./components/results-viewer"

@@ -3,13 +3,13 @@
 import type React from "react"
 
 import { useState, useCallback, useEffect } from "react"
-import { Button } from "../components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card.js"
-import { Badge } from "../components/ui/badge.js"
-import { Progress } from "../components/ui/progress.js"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs.js"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.js"
+import { Badge } from "@/components/ui/badge.js"
+import { Progress } from "@/components/ui/progress.js"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.js"
 import { Upload, FileText, Trash2, Users, FolderOpen, AlertCircle, CheckCircle2, Clock, Play, Pause, BarChart3 } from "lucide-react"
-import { cn } from "./ui/lib/utils"
+import { cn } from "@/lib/utils"
 
 interface PascalFile {
   id: string

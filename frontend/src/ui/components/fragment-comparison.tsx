@@ -1,13 +1,13 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "../components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card.js"
-import { Badge } from "../components/ui/badge.js"
-import { ScrollArea } from "../components/ui/scroll-area.js"
-import { Progress } from "../components/ui/progress.js"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.js"
+import { Badge } from "@/components/ui/badge.js"
+import { ScrollArea } from "@/components/ui/scroll-area.js"
+import { Progress } from "@/components/ui/progress.js"
 import { ArrowLeft, Copy, Download, Eye, EyeOff, Maximize2, Code2, AlertTriangle, FileText, Zap } from "lucide-react"
-import { cn } from "./ui/lib/utils"
+import { cn } from "@/lib/utils"
 
 interface SuspiciousFragment {
   id: string
