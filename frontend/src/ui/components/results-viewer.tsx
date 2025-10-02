@@ -32,17 +32,11 @@ interface AnalysisResult {
   similarity: number
   suspiciousFragments: number
   status: "high" | "medium" | "low"
-  details: {
-    structuralSimilarity: number
-    lexicalSimilarity: number
-    semanticSimilarity: number
-  }
   group1?: string
   group2?: string
   timestamp: Date
   processingTime?: number
   mappedFragments?: any[]
-  // New fields from actual detection
   confidence?: string
   isPlagiarism?: boolean
   coverage1?: number
@@ -158,11 +152,8 @@ export default function ResultsViewer({ results, onViewDetails }: ResultsViewerP
         "Statut",
         "Plagiat détecté",
         "Confiance",
-        "Similarité structurelle",
-        "Similarité lexicale",
-        "Similarité sémantique",
-        "Coverage 1",
-        "Coverage 2",
+        "Coverage 1 (%)",
+        "Coverage 2 (%)",
         "Fragment le plus long",
         "Temps de traitement (ms)",
         "Horodatage"
@@ -177,9 +168,6 @@ export default function ResultsViewer({ results, onViewDetails }: ResultsViewerP
         getStatusLabel(result.status),
         result.isPlagiarism ? 'Oui' : 'Non',
         result.confidence || '',
-        result.details.structuralSimilarity.toFixed(1),
-        result.details.lexicalSimilarity.toFixed(1),
-        result.details.semanticSimilarity.toFixed(1),
         result.coverage1?.toFixed(1) || '',
         result.coverage2?.toFixed(1) || '',
         result.longestFragment?.toString() || '',
@@ -331,25 +319,29 @@ export default function ResultsViewer({ results, onViewDetails }: ResultsViewerP
                           </div>
 
                           {(result.group1 || result.group2) && (
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
                               <Users className="h-4 w-4" />
                               {result.group1 || 'N/A'} vs {result.group2 || 'N/A'}
                             </div>
                           )}
 
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
                             <div>
-                              <span className="text-muted-foreground">Structurelle: </span>
-                              <span className="font-medium">{result.details.structuralSimilarity.toFixed(1)}%</span>
+                              <span className="text-muted-foreground">Fragments: </span>
+                              <span className="font-medium">{result.suspiciousFragments}</span>
                             </div>
-                            <div>
-                              <span className="text-muted-foreground">Lexicale: </span>
-                              <span className="font-medium">{result.details.lexicalSimilarity.toFixed(1)}%</span>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground">Sémantique: </span>
-                              <span className="font-medium">{result.details.semanticSimilarity.toFixed(1)}%</span>
-                            </div>
+                            {result.coverage1 !== undefined && result.coverage2 !== undefined && (
+                              <div>
+                                <span className="text-muted-foreground">Couverture: </span>
+                                <span className="font-medium">{result.coverage1.toFixed(0)}% / {result.coverage2.toFixed(0)}%</span>
+                              </div>
+                            )}
+                            {result.longestFragment && (
+                              <div>
+                                <span className="text-muted-foreground">Plus long: </span>
+                                <span className="font-medium">{result.longestFragment} tokens</span>
+                              </div>
+                            )}
                             {result.confidence && (
                               <div>
                                 <span className="text-muted-foreground">Confiance: </span>
@@ -378,27 +370,14 @@ export default function ResultsViewer({ results, onViewDetails }: ResultsViewerP
                                   {result.mappedFragments.length} fragments mappés
                                 </span>
                               )}
-                              {result.longestFragment && (
-                                <span className="flex items-center gap-1">
-                                  <FileText className="h-3 w-3" />
-                                  Fragment max: {result.longestFragment} tokens
-                                </span>
-                              )}
                             </div>
                           </div>
                         </div>
 
                         <div className="flex items-center gap-4">
                           <div className="text-right">
-                            <div className="text-2xl font-bold text-foreground">{result.similarity.toFixed(1)}%</div>
-                            <div className="text-sm text-muted-foreground">
-                              {result.suspiciousFragments} fragment{result.suspiciousFragments > 1 ? "s" : ""}
-                            </div>
-                            {result.coverage1 !== undefined && result.coverage2 !== undefined && (
-                              <div className="text-xs text-muted-foreground mt-1">
-                                Coverage: {result.coverage1.toFixed(0)}% / {result.coverage2.toFixed(0)}%
-                              </div>
-                            )}
+                            <div className="text-3xl font-bold text-foreground">{result.similarity.toFixed(1)}%</div>
+                            <div className="text-sm text-muted-foreground">Similarité</div>
                           </div>
 
                           <Button variant="outline" size="sm" onClick={() => onViewDetails(result)}>
@@ -408,31 +387,13 @@ export default function ResultsViewer({ results, onViewDetails }: ResultsViewerP
                         </div>
                       </div>
 
-                      {/* Progress bars for similarity breakdown */}
-                      <div className="grid grid-cols-3 gap-4 text-sm">
-                        <div>
-                          <div className="flex justify-between mb-1">
-                            <span className="text-muted-foreground">Structurelle</span>
-                            <span className="font-medium">{Math.round(result.details.structuralSimilarity)}%</span>
-                          </div>
-                          <Progress value={result.details.structuralSimilarity} className="h-2" />
+                      {/* Single progress bar for overall similarity */}
+                      <div>
+                        <div className="flex justify-between mb-1 text-sm">
+                          <span className="text-muted-foreground">Similarité globale</span>
+                          <span className="font-medium">{Math.round(result.similarity)}%</span>
                         </div>
-
-                        <div>
-                          <div className="flex justify-between mb-1">
-                            <span className="text-muted-foreground">Lexicale</span>
-                            <span className="font-medium">{Math.round(result.details.lexicalSimilarity)}%</span>
-                          </div>
-                          <Progress value={result.details.lexicalSimilarity} className="h-2" />
-                        </div>
-
-                        <div>
-                          <div className="flex justify-between mb-1">
-                            <span className="text-muted-foreground">Sémantique</span>
-                            <span className="font-medium">{Math.round(result.details.semanticSimilarity)}%</span>
-                          </div>
-                          <Progress value={result.details.semanticSimilarity} className="h-2" />
-                        </div>
+                        <Progress value={result.similarity} className="h-2" />
                       </div>
                     </CardContent>
                   </Card>
@@ -450,8 +411,8 @@ export default function ResultsViewer({ results, onViewDetails }: ResultsViewerP
                           <th className="text-left p-4 font-medium">Groupes</th>
                           <th className="text-left p-4 font-medium">Similarité</th>
                           <th className="text-left p-4 font-medium">Fragments</th>
+                          <th className="text-left p-4 font-medium">Couverture</th>
                           <th className="text-left p-4 font-medium">Statut</th>
-                          <th className="text-left p-4 font-medium">Confiance</th>
                           <th className="text-left p-4 font-medium">Actions</th>
                         </tr>
                       </thead>
@@ -468,7 +429,7 @@ export default function ResultsViewer({ results, onViewDetails }: ResultsViewerP
                               {result.group1 || 'N/A'} vs {result.group2 || 'N/A'}
                             </td>
                             <td className="p-4">
-                              <div className="font-bold text-lg">{result.similarity.toFixed(1)}%</div>
+                              <div className="font-bold text-xl">{result.similarity.toFixed(1)}%</div>
                               {result.isPlagiarism && (
                                 <Badge variant="destructive" className="mt-1">
                                   Plagiat
@@ -483,17 +444,13 @@ export default function ResultsViewer({ results, onViewDetails }: ResultsViewerP
                                 </div>
                               )}
                             </td>
+                            <td className="p-4 text-sm">
+                              {result.coverage1?.toFixed(0)}% / {result.coverage2?.toFixed(0)}%
+                            </td>
                             <td className="p-4">
                               <Badge className={getStatusColor(result.status)}>
                                 {getStatusLabel(result.status)}
                               </Badge>
-                            </td>
-                            <td className="p-4">
-                              {result.confidence && (
-                                <span className={cn("text-sm font-medium", getConfidenceColor(result.confidence))}>
-                                  {result.confidence.replace('_', ' ')}
-                                </span>
-                              )}
                             </td>
                             <td className="p-4">
                               <Button variant="outline" size="sm" onClick={() => onViewDetails(result)}>

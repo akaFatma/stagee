@@ -30,16 +30,16 @@ interface AnalysisResult {
   similarity: number
   suspiciousFragments: number
   status: "high" | "medium" | "low"
-  details: {
-    structuralSimilarity: number
-    lexicalSimilarity: number
-    semanticSimilarity: number
-  }
   group1?: string
   group2?: string
   timestamp: Date
   processingTime?: number
   mappedFragments?: any[]
+  confidence?: string
+  isPlagiarism?: boolean
+  coverage1?: number
+  coverage2?: number
+  longestFragment?: number
 }
 
 interface AnalysisDashboardProps {
@@ -258,16 +258,16 @@ export default function AnalysisDashboard({ selectedFiles, onFilesChange, onAnal
             similarity: r.overallSimilarity * 100,
             suspiciousFragments: r.mappedFragments?.length || r.sharedFragments || 0,
             status,
-            details: {
-              structuralSimilarity: r.syntacticSimilarity * 100,
-              lexicalSimilarity: (r.coverage1 + r.coverage2) * 50, // approximation
-              semanticSimilarity: r.overallSimilarity * 100
-            },
             group1: file1Info?.group,
             group2: file2Info?.group,
             timestamp: new Date(),
             processingTime: r.processingTime,
-            mappedFragments: r.mappedFragments || []
+            mappedFragments: r.mappedFragments || [],
+            confidence: r.confidence,
+            isPlagiarism: r.isPlagiarism,
+            coverage1: r.coverage1 * 100,
+            coverage2: r.coverage2 * 100,
+            longestFragment: r.longestFragment
           }
         })
 
@@ -601,19 +601,23 @@ export default function AnalysisDashboard({ selectedFiles, onFilesChange, onAnal
                               {result.group1} vs {result.group2}
                             </p>
                           )}
-                          <div className="grid grid-cols-3 gap-4 text-sm">
+                          <div className="flex gap-4 text-sm">
                             <div>
-                              <span className="text-muted-foreground">Structurelle: </span>
-                              <span className="font-medium">{result.details.structuralSimilarity.toFixed(1)}%</span>
+                              <span className="text-muted-foreground">Fragments: </span>
+                              <span className="font-medium">{result.suspiciousFragments}</span>
                             </div>
-                            <div>
-                              <span className="text-muted-foreground">Lexicale: </span>
-                              <span className="font-medium">{result.details.lexicalSimilarity.toFixed(1)}%</span>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground">Sémantique: </span>
-                              <span className="font-medium">{result.details.semanticSimilarity.toFixed(1)}%</span>
-                            </div>
+                            {result.coverage1 !== undefined && result.coverage2 !== undefined && (
+                              <div>
+                                <span className="text-muted-foreground">Couverture: </span>
+                                <span className="font-medium">{result.coverage1.toFixed(1)}% / {result.coverage2.toFixed(1)}%</span>
+                              </div>
+                            )}
+                            {result.longestFragment && (
+                              <div>
+                                <span className="text-muted-foreground">Plus long: </span>
+                                <span className="font-medium">{result.longestFragment} tokens</span>
+                              </div>
+                            )}
                           </div>
                         </div>
                         <div className="text-right">
@@ -621,7 +625,7 @@ export default function AnalysisDashboard({ selectedFiles, onFilesChange, onAnal
                             {result.similarity.toFixed(1)}%
                           </div>
                           <div className="text-sm text-muted-foreground">
-                            {result.suspiciousFragments} fragment{result.suspiciousFragments > 1 ? 's' : ''}
+                            Similarité
                           </div>
                           {result.processingTime && (
                             <div className="text-xs text-muted-foreground">

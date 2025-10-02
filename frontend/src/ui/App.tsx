@@ -28,16 +28,16 @@ interface AnalysisResult {
   similarity: number
   suspiciousFragments: number
   status: "high" | "medium" | "low"
-  details: {
-    structuralSimilarity: number
-    lexicalSimilarity: number
-    semanticSimilarity: number
-  }
   group1?: string
   group2?: string
   timestamp: Date
   processingTime?: number
   mappedFragments?: any[]
+  confidence?: string
+  isPlagiarism?: boolean
+  coverage1?: number
+  coverage2?: number
+  longestFragment?: number
 }
 
 export default function App() {
